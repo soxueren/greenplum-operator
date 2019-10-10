@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greenplum-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: greenplum-operator
+  template:
+    metadata:
+      labels:
+        name: greenplum-operator
+    spec:
+      serviceAccountName: greenplum-operator
+      containers:
+        - name: greenplum-operator
+          # Replace this with the built image name
+          image: REPLACE_IMAGE
+          command:
+          - greenplum-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "greenplum-operator"
