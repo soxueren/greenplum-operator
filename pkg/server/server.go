@@ -2,17 +2,17 @@ package server
 
 import (
 	"fmt"
-	"storageagent/pkg/setting"
+	"github.com/soxueren/greenplum-operator/pkg/setting"
 	"strings"
+	"log"
 	"time"
-
-    "log"
 	"github.com/chilts/sid"
 	"github.com/gin-gonic/gin"
 	"github.com/micro/go-micro/registry"
-	consul "github.com/micro/go-micro/registry/consul"
-	web "github.com/micro/go-web"
+	consul "github.com/micro/go-micro/registry/consul"	
+	"github.com/micro/go-micro/web"
 )
+
 
 func Start() web.Service {
 
@@ -25,16 +25,16 @@ func Start() web.Service {
 		o.Addrs = hosts
 	})
 
+	log.Printf("Agent Server Listening on :%v", setting.ServerSetting.Addr)
+
 	service := web.NewService(
 		web.Id(fmt.Sprintf("%s-%s", setting.ServerSetting.Name, sid.Id())),
 		web.Name(setting.ServerSetting.Name),
 		web.Version(setting.ServerSetting.Version),
-		web.Address(setting.ServerSetting.Addr),
+		web.Address(setting.ServerSetting.Addr),		
 		web.RegisterTTL(time.Second*30),
 		web.RegisterInterval(time.Second*10),
-	)
-
-	log.Printf("Storage Server Listening on :%v", setting.ServerSetting.Addr)
+	)	
 
 	service.Init(func(o *web.Options) {
 		o.Registry = consl
@@ -43,11 +43,11 @@ func Start() web.Service {
 	return service
 }
 
-func RegistryRouter(service web.Service, router *gin.Engine) {
-	service.Handle("/", router)
-	mainLog.Printf("Storage Server Dispatch Root Path")
+func RegistryRouter(service web.Service,router *gin.Engine) {
+	log.Printf("Agent Server Dispatch Root Path")
 	// Run server
-	if err := service.Run(); err != nil {
-		mainLog.Fatal(err)
+	if err := service.Run(); err != nil {	
+		log.Printf("Agent Server error")	
+		log.Fatal(err)
 	}
 }

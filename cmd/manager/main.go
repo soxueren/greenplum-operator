@@ -31,6 +31,7 @@ import (
 
 	"github.com/soxueren/greenplum-operator/pkg/routers"
 	"github.com/soxueren/greenplum-operator/pkg/server"
+	"github.com/soxueren/greenplum-operator/pkg/setting"
 	"github.com/DeanThompson/ginpprof"
 )
 
@@ -147,10 +148,13 @@ func main() {
 
 	log.Info("Starting the Cmd.")
 
-	service := server.Start()
+
+	setting.Setup()
+
+	srv := server.Start()
 	router := routers.InitRouter()
 	ginpprof.Wrap(router)
-	server.RegistryRouter(service, router)
+	server.RegistryRouter(srv, router)
 
 	// Start the Cmd
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
