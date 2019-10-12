@@ -1,0 +1,7 @@
+apiVersion: gp.sjgs/v1alpha1
+kind: GPDBCluster
+metadata:
+  name: example-gpdbcluster
+spec:
+  # Add fields here
+  size: 3

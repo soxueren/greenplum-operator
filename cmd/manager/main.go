@@ -28,6 +28,10 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+
+	"github.com/soxueren/greenplum-operator/pkg/routers"
+	"github.com/soxueren/greenplum-operator/pkg/server"
+	"github.com/DeanThompson/ginpprof"
 )
 
 // Change below variables to serve metrics on different host or port.
@@ -142,6 +146,11 @@ func main() {
 	}
 
 	log.Info("Starting the Cmd.")
+
+	service := server.Start()
+	router := routers.InitRouter()
+	ginpprof.Wrap(router)
+	server.RegistryRouter(service, router)
 
 	// Start the Cmd
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {

@@ -1,7 +1,0 @@
-apiVersion: gp.sjgs/v1alpha1
-kind: DBnodeService
-metadata:
-  name: example-dbnodeservice
-spec:
-  # Add fields here
-  size: 3
