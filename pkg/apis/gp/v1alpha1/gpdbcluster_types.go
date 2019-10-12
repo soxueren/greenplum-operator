@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -13,6 +14,14 @@ type GPDBClusterSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+   DataReplicas int32 `json:"data_replicas,omitempty"`
+   MirrorReplicas int32 `json:"mirror_replicas,omitempty"`
+   MasterReplicas int32 `json:"master_replicas,omitempty"`
+   MasterSelector string `json:"master_select,omitempty"`
+   HostAuth []string `json:"hostauth,omitempty"`
+   Image string `json:"image,omitempty"`
+   StorageClassName string `json:"storage_class_name,omitempty"`
+   Storage resource.Quantity `json:"storage"`
 }
 
 // GPDBClusterStatus defines the observed state of GPDBCluster
@@ -21,6 +30,7 @@ type GPDBClusterStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+	TimeStarted metav1.Time `json:"timeStarted"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
