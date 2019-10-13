@@ -5,26 +5,21 @@ metadata:
 spec:
   masterAndStandby:
     replicas: 1
-    Image: busybox
-    StorageClassName: nfsclient
-    Storage: 2Gi
+    image: busybox
+    storageClassName: nfsclient
+    storage: 2Gi
     hostBasedAuthentication: |
        host   all   gpadmin   0.0.0.0/0   md5
        host   all   gpuser    0.0.0.0/0   md5
-       host   all   all       0.0.0.0/0   md5
+       host   all   all    0.0.0.0/0   md5
   segments:
     replicas: 2
-    Image: busybox
-    StorageClassName: nfsclient
-    Storage: 2Gi
+    image: busybox
+    storageClassName: nfsclient
+    storage: 2Gi
   mirrors:
     replicas: 1
-    Image: busybox
-    StorageClassName: nfsclient
-    Storage: 2Gi
+    image: busybox
+    storageClassName: nfsclient
+    storage: 2Gi
   masterSelector: master-1
-
-
-     
-
-
