@@ -31,7 +31,6 @@ import (
 
 	"github.com/soxueren/greenplum-operator/pkg/routers"
 	"github.com/soxueren/greenplum-operator/pkg/server"
-	"github.com/soxueren/greenplum-operator/pkg/setting"
 	"github.com/DeanThompson/ginpprof"
 )
 
@@ -41,6 +40,7 @@ var (
 	metricsPort         int32 = 8383
 	operatorMetricsPort int32 = 8686
 )
+
 var log = logf.Log.WithName("cmd")
 
 func printVersion() {
@@ -50,16 +50,18 @@ func printVersion() {
 }
 
 func main() {
+
 	// Add the zap logger flag set to the CLI. The flag set must
 	// be added before calling pflag.Parse().
 	pflag.CommandLine.AddFlagSet(zap.FlagSet())
 
 	// Add flags registered by imported packages (e.g. glog and
 	// controller-runtime)
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
-
-	pflag.Parse()
-
+	//pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+    
+	//pflag.Parse()
+	
+	
 	// Use a zap logr.Logger implementation. If none of the zap
 	// flags are configured (or if the zap flag set is not being
 	// used), this defaults to a production zap logger.
@@ -146,21 +148,22 @@ func main() {
 		}
 	}
 
-	log.Info("Starting the Cmd.")
-
-
-	setting.Setup()
-
-	srv := server.Start()
-	router := routers.InitRouter()
-	ginpprof.Wrap(router)
-	server.RegistryRouter(srv, router)
+	log.Info("Starting the Cmd.")	
 
 	// Start the Cmd
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
 		log.Error(err, "Manager exited non-zero")
 		os.Exit(1)
-	}
+	}	
+
+	flag.Parse()
+
+	//start micro web service
+	srv := server.Start()
+	router := routers.InitRouter()
+	ginpprof.Wrap(router)
+	server.RegistryRouter(srv, router)
+	
 }
 
 // serveCRMetrics gets the Operator/CustomResource GVKs and generates metrics based on those types.

@@ -2,10 +2,10 @@ package server
 
 import (
 	"fmt"
-	"github.com/soxueren/greenplum-operator/pkg/setting"
-	"strings"
 	"log"
 	"time"
+	"flag"
+	"strings"
 	"github.com/chilts/sid"
 	"github.com/gin-gonic/gin"
 	"github.com/micro/go-micro/registry"
@@ -13,25 +13,22 @@ import (
 	"github.com/micro/go-micro/web"
 )
 
+var RegistryAddress = flag.String("registry_address", "127.0.0.1:8500", "registry address")
 
 func Start() web.Service {
 
-	if setting.ServerSetting.RunMode == "release" {
-		gin.SetMode(gin.ReleaseMode)
-	}
+	flag.Parse()
 
-	hosts := strings.Split(setting.ConsulSetting.Hosts, ",")
+	hosts := strings.Split(*RegistryAddress, ",")
 	consl := consul.NewRegistry(func(o *registry.Options) {
 		o.Addrs = hosts
 	})
 
-	log.Printf("Agent Server Listening on :%v", setting.ServerSetting.Addr)
-
+	web.DefaultAddress=":8080"
+	web.DefaultName="GPDBOperator"
+	
 	service := web.NewService(
-		web.Id(fmt.Sprintf("%s-%s", setting.ServerSetting.Name, sid.Id())),
-		web.Name(setting.ServerSetting.Name),
-		web.Version(setting.ServerSetting.Version),
-		web.Address(setting.ServerSetting.Addr),		
+		web.Id(fmt.Sprintf("%s-%s", web.DefaultName, sid.Id())),			
 		web.RegisterTTL(time.Second*30),
 		web.RegisterInterval(time.Second*10),
 	)	
@@ -44,6 +41,7 @@ func Start() web.Service {
 }
 
 func RegistryRouter(service web.Service,router *gin.Engine) {
+	service.Handle("/",router)
 	log.Printf("Agent Server Dispatch Root Path")
 	// Run server
 	if err := service.Run(); err != nil {	
