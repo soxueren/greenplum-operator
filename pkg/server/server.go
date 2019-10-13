@@ -13,7 +13,7 @@ import (
 	"github.com/micro/go-micro/web"
 )
 
-var RegistryAddress = flag.String("registry_address", "127.0.0.1:8500", "registry address")
+var RegistryAddress = flag.String("registry_address", "11.71.16.163:8500", "registry address")
 
 func Start() web.Service {
 

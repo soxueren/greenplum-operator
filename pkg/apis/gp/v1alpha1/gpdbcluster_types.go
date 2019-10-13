@@ -14,16 +14,32 @@ type GPDBClusterSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
-   DataReplicas int32 `json:"data_replicas,omitempty"`
-   MirrorReplicas int32 `json:"mirror_replicas,omitempty"`
-   MasterReplicas int32 `json:"master_replicas,omitempty"`
-   MasterSelector string `json:"master_select,omitempty"`
-   HostAuth []string `json:"hostauth,omitempty"`
-   Image string `json:"image,omitempty"`
-   StorageClassName string `json:"storage_class_name,omitempty"`
-   Storage resource.Quantity `json:"storage"`
+   masterSelector string `json:"masterselect,omitempty"`
+   masterAndStandby MasterAndStandby `json:"masterselect,omitempty"`
+   segments Segments `json:"segments,omitempty"`
+   mirrors Mirrors `json:"mirrors,omitempty"`
 }
 
+type MasterAndStandby struct{
+	Replicas int32 `json:"replicas,omitempty"`
+	Image string `json:"image,omitempty"`
+	hostBasedAuthentication []string `json:"hostauth,omitempty"`
+	StorageClassName string `json:"storage_class_name,omitempty"`
+	Storage resource.Quantity `json:"storage"`
+}
+
+type Segments struct {
+    Replicas int32 `json:"replicas,omitempty"`
+	Image string `json:"image,omitempty"`
+	StorageClassName string `json:"storage_class_name,omitempty"`
+	Storage resource.Quantity `json:"storage"`
+}
+
+type Mirrors struct {
+	Image string `json:"image,omitempty"`
+	StorageClassName string `json:"storage_class_name,omitempty"`
+	Storage resource.Quantity `json:"storage"`
+}
 // GPDBClusterStatus defines the observed state of GPDBCluster
 // +k8s:openapi-gen=true
 type GPDBClusterStatus struct {

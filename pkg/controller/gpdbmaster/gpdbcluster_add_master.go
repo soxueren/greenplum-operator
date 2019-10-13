@@ -1,4 +1,4 @@
-package gpdbcluster
+package gpdbmaster
 
 import (
 	"context"
@@ -9,70 +9,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/client"	
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
+var _ reconcile.Reconciler = &ReconcileMaster{}
 
-var log = logf.Log.WithName("controller_gpdbcluster")
-
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
-
-// Add creates a new GPDBCluster Controller and adds it to the Manager. The Manager will set fields on the Controller
-// and Start it when the Manager is Started.
-func Add(mgr manager.Manager) error {
-	return add(mgr, newReconciler(mgr))
-}
-
-// newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileGPDBCluster{client: mgr.GetClient(), scheme: mgr.GetScheme()}
-}
-
-// add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, r reconcile.Reconciler) error {
-	// Create a new controller
-	c, err := controller.New("gpdbcluster-controller", mgr, controller.Options{Reconciler: r})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to primary resource GPDBCluster
-	err = c.Watch(&source.Kind{Type: &gpv1alpha1.GPDBCluster{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
-	}
-
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner GPDBCluster
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &gpv1alpha1.GPDBCluster{},
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// blank assignment to verify that ReconcileGPDBCluster implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcileGPDBCluster{}
-
-// ReconcileGPDBCluster reconciles a GPDBCluster object
-type ReconcileGPDBCluster struct {
+type ReconcileMaster struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
+}
+
+// newReconciler returns a new reconcile.Reconciler
+func newMasterReconciler(mgr manager.Manager) reconcile.Reconciler {
+	return &ReconcileMaster{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // Reconcile reads that state of the cluster for a GPDBCluster object and makes changes based on the state read
@@ -82,9 +35,9 @@ type ReconcileGPDBCluster struct {
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileGPDBCluster) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileMaster) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling GPDBCluster")
+	reqLogger.Info("Reconciling GPDBCluster master")
 
 	// Fetch the GPDBCluster instance
 	instance := &gpv1alpha1.GPDBCluster{}
@@ -101,14 +54,24 @@ func (r *ReconcileGPDBCluster) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	// Define a new Pod object
-	pod := newPodForCR(instance)
+	// create pvc
+	// PersistentVolumeClaimSpec
+	// PersistentVolumeClaim
+
+	// Define a new Pod object	
+	// PodSpec
+	// Volume
+	// VolumeSource
+	// PersistentVolumeClaim
+	// ClaimName
+	 pod := newMasterForCR(instance)
 
 	// Set GPDBCluster instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
 		return reconcile.Result{}, err
-	}
+	}  
 
-	// Check if this Pod already exists
+	//Check if this Pod already exists
 	found := &corev1.Pod{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
@@ -126,24 +89,25 @@ func (r *ReconcileGPDBCluster) Reconcile(request reconcile.Request) (reconcile.R
 
 	// Pod already exists - don't requeue
 	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
+	
 	return reconcile.Result{}, nil
 }
 
 // newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *gpv1alpha1.GPDBCluster) *corev1.Pod {
+func newMasterForCR(cr *gpv1alpha1.GPDBCluster) *corev1.Pod {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
+			Name:      cr.Name + "-master",
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:    "busybox",
+					Name:    "master",
 					Image:   "busybox",
 					Command: []string{"sleep", "3600"},
 				},

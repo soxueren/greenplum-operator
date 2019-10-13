@@ -15,7 +15,6 @@ require (
 	github.com/gorilla/websocket v1.4.0
 	github.com/hashicorp/consul/api v1.2.0 // indirect
 	github.com/hashicorp/memberlist v0.1.5 // indirect
-	github.com/micro/cli v0.2.0
 	github.com/micro/go-micro v1.11.1
 	github.com/nats-io/nats-server/v2 v2.1.0 // indirect
 	github.com/operator-framework/operator-sdk v0.0.0-20191012024916-f419ad3f3dc5

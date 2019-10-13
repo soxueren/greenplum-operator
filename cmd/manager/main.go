@@ -29,9 +29,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 
-	"github.com/soxueren/greenplum-operator/pkg/routers"
-	"github.com/soxueren/greenplum-operator/pkg/server"
-	"github.com/DeanThompson/ginpprof"
+	// "github.com/soxueren/greenplum-operator/pkg/routers"
+	// "github.com/soxueren/greenplum-operator/pkg/server"
+	// "github.com/DeanThompson/ginpprof"
 )
 
 // Change below variables to serve metrics on different host or port.
@@ -57,9 +57,9 @@ func main() {
 
 	// Add flags registered by imported packages (e.g. glog and
 	// controller-runtime)
-	//pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
     
-	//pflag.Parse()
+	pflag.Parse()
 	
 	
 	// Use a zap logr.Logger implementation. If none of the zap
@@ -148,22 +148,20 @@ func main() {
 		}
 	}
 
-	log.Info("Starting the Cmd.")	
+	//start micro web service
+	// srv := server.Start()
+	// router := routers.InitRouter()
+	// ginpprof.Wrap(router)
+	// server.RegistryRouter(srv, router)	
 
+	log.Info("Starting the Cmd.")	
+	
 	// Start the Cmd
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
 		log.Error(err, "Manager exited non-zero")
 		os.Exit(1)
-	}	
+	}		
 
-	flag.Parse()
-
-	//start micro web service
-	srv := server.Start()
-	router := routers.InitRouter()
-	ginpprof.Wrap(router)
-	server.RegistryRouter(srv, router)
-	
 }
 
 // serveCRMetrics gets the Operator/CustomResource GVKs and generates metrics based on those types.

@@ -23,3 +23,8 @@ spec:
     StorageClassName: nfsclient
     Storage: 2Gi
   masterSelector: master-1
+
+
+     
+
+
