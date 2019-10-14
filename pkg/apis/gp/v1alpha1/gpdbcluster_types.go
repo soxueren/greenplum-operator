@@ -1,8 +1,8 @@
 package v1alpha1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -14,32 +14,34 @@ type GPDBClusterSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
-   MasterSelector string `json:"masterSelect,omitempty"`
-   MasterAndStandby MasterAndStandby `json:"masterAndStandby,omitempty"`
-   Segments Segments `json:"segments,omitempty"`
-   Mirrors Mirrors `json:"mirrors,omitempty"`
+	MasterSelector   string           `json:"masterSelect,omitempty"`
+	MasterAndStandby MasterAndStandby `json:"masterAndStandby,omitempty"`
+	Segments         Segments         `json:"segments,omitempty"`
+	Mirrors          Mirrors          `json:"mirrors,omitempty"`
 }
 
-type MasterAndStandby struct{
-	Replicas int32 `json:"replicas,omitempty"`
-	Image string `json:"image,omitempty"`
-	HostBasedAuthentication string `json:"hostBasedAuthentication,omitempty"`
-	StorageClassName string `json:"storageClassName,omitempty"`
-	Storage resource.Quantity `json:"storage"`
+type MasterAndStandby struct {
+	Replicas                int               `json:"replicas,omitempty"`
+	Image                   string            `json:"image,omitempty"`
+	HostBasedAuthentication string            `json:"hostBasedAuthentication,omitempty"`
+	StorageClassName        string            `json:"storageClassName,omitempty"`
+	Storage                 resource.Quantity `json:"storage"`
 }
 
 type Segments struct {
-    Replicas int32 `json:"replicas,omitempty"`
-	Image string `json:"image,omitempty"`
-	StorageClassName string `json:"storageClassName,omitempty"`
-	Storage resource.Quantity `json:"storage"`
+	Replicas         int               `json:"replicas,omitempty"`
+	Image            string            `json:"image,omitempty"`
+	StorageClassName string            `json:"storageClassName,omitempty"`
+	Storage          resource.Quantity `json:"storage"`
 }
 
 type Mirrors struct {
-	Image string `json:"image,omitempty"`
-	StorageClassName string `json:"storageClassName,omitempty"`
-	Storage resource.Quantity `json:"storage"`
+	Replicas         int               `json:"replicas,omitempty"`
+	Image            string            `json:"image,omitempty"`
+	StorageClassName string            `json:"storageClassName,omitempty"`
+	Storage          resource.Quantity `json:"storage"`
 }
+
 // GPDBClusterStatus defines the observed state of GPDBCluster
 // +k8s:openapi-gen=true
 type GPDBClusterStatus struct {
