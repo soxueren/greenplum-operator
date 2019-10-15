@@ -11,8 +11,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_gpdbmaster")
-
+var (
+	log = logf.Log.WithName("controller_gpdbmaster")
+	tag = "master"
+	MIN_REPLICAS = 1
+ )
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
 * business logic.  Delete these comments after modifying this file.*

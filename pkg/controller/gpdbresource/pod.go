@@ -16,6 +16,7 @@ func NewPodForCR(cr *gpv1alpha1.GPDBCluster, tag string, suffix string) *corev1.
 	labels := map[string]string{
 		"app":  cr.Name,
 		"name": cr.Name + "-" + tag + "-" + suffix,
+		"tag": tag,
 	}
 	image := cr.Spec.MasterAndStandby.Image
 	commond := []string{"sleep", "3600"}

@@ -7,19 +7,19 @@ spec:
     replicas: 1
     image: busybox
     storageClassName: nfsclient
-    storage: 2Gi
+    storage: 10Mi
     hostBasedAuthentication: |
        host   all   gpadmin   0.0.0.0/0   md5
        host   all   gpuser    0.0.0.0/0   md5
        host   all   all    0.0.0.0/0   md5
   segments:
-    replicas: 2
+    replicas: 1
     image: busybox
     storageClassName: nfsclient
-    storage: 2Gi
+    storage: 10Mi
   mirrors:
     replicas: 1
     image: busybox
     storageClassName: nfsclient
-    storage: 2Gi
-  masterSelector: master-1
+    storage: 10Mi
+  masterSelector: master-0
