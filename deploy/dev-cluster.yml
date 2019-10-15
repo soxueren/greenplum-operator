@@ -13,13 +13,13 @@ spec:
        host   all   gpuser    0.0.0.0/0   md5
        host   all   all    0.0.0.0/0   md5
   segments:
-    replicas: 2
+    replicas: 1
     image: busybox
     storageClassName: nfsclient
-    storage: 2Gi
+    storage: 1Gi
   mirrors:
     replicas: 1
     image: busybox
     storageClassName: nfsclient
-    storage: 2Gi
-  masterSelector: master-1
+    storage: 1Gi
+  masterSelector: master-0

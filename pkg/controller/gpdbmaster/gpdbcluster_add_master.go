@@ -8,7 +8,6 @@ import (
 	"github.com/soxueren/greenplum-operator/pkg/controller/gpdbresource"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -18,6 +17,7 @@ import (
 )
 
 var _ reconcile.Reconciler = &ReconcileMaster{}
+var tag = "master"
 
 type ReconcileMaster struct {
 	// This client, initialized using mgr.Client() above, is a split client
@@ -56,17 +56,94 @@ func (r *ReconcileMaster) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
-	//TODO add gpdbcluster service
+	_, err = createServiceForCR(r, instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	_, err = createPVCForCR(r, instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	//TODO when the number of  pods is  more than Replicas,reduce it ?
+	_, err = createNodeForCR(r, instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func createServiceForCR(r *ReconcileMaster, instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
+
+	reqLogger := log.WithValues("Service.initialize")
+
 	srv := gpdbresource.NewService(instance)
 	reqLogger.Info("Creating a new service", "srv.Name", srv.Name)
+	//Check if this Pod already exists
+	found := &corev1.Pod{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: srv.Name, Namespace: srv.Namespace}, found)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new Service", "Service.Namespace", srv.Namespace, "Service.Name", srv.Name)
+		err = r.client.Create(context.TODO(), srv)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		// Pod created successfully - don't requeue
+		return reconcile.Result{}, nil
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+	// Pod already exists - don't requeue
+	reqLogger.Info("Skip reconcile: Service already exists", "Service.Namespace", found.Namespace, "Service.Name", found.Name)
 
+	return reconcile.Result{}, nil
+}
+
+func createPVCForCR(r *ReconcileMaster, instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
+	reqLogger := log.WithValues("PersistentVolumeClaim.initialize")
+	size := instance.Spec.MasterAndStandby.Replicas
 	// when GPDBCluster created,create pvc and create gpdb node pod
-	for i := 0; i < instance.Spec.MasterAndStandby.Replicas; i++ {
+	for i := 0; i < size; i++ {
 		//TODO PersistentVolumeClaim
-		pvc := gpdbresource.NewPersistentVolume(instance, "master", i)
+		pvc := gpdbresource.NewPersistentVolume(instance, tag, strconv.Itoa(i))
 		reqLogger.Info("Creating a new pvc", "pvc.Name", pvc.Name)
+
+		// Set GPDBCluster instance as the owner and controller
+		if err := controllerutil.SetControllerReference(instance, pvc, r.scheme); err != nil {
+			return reconcile.Result{}, err
+		}
+
+		//Check if this Pod already exists
+		found := &corev1.Pod{}
+		err := r.client.Get(context.TODO(), types.NamespacedName{Name: pvc.Name, Namespace: pvc.Namespace}, found)
+		if err != nil && errors.IsNotFound(err) {
+			reqLogger.Info("Creating a new PersistentVolumeClaim", "pvc.Namespace", pvc.Namespace, "pvc.Name", pvc.Name)
+			err = r.client.Create(context.TODO(), pvc)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+
+			// Pod created successfully - don't requeue
+			return reconcile.Result{}, nil
+		} else if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// Pod already exists - don't requeue
+		reqLogger.Info("Skip reconcile: pvc already exists", "pvc.Namespace", found.Namespace, "pvc.Name", found.Name)
+
+	}
+	return reconcile.Result{}, nil
+}
+
+func createNodeForCR(r *ReconcileMaster, instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
+	reqLogger := log.WithValues("Pod.initialize")
+	size := instance.Spec.MasterAndStandby.Replicas
+	// when GPDBCluster created,create pvc and create gpdb node pod
+	for i := 0; i < size; i++ {
 		//create pod object
-		pod := newMasterForCR(instance, i)
+		pod := gpdbresource.NewPodForCR(instance, tag, strconv.Itoa(i))
 
 		// Set GPDBCluster instance as the owner and controller
 		if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
@@ -75,7 +152,7 @@ func (r *ReconcileMaster) Reconcile(request reconcile.Request) (reconcile.Result
 
 		//Check if this Pod already exists
 		found := &corev1.Pod{}
-		err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
+		err := r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
 		if err != nil && errors.IsNotFound(err) {
 			reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
 			err = r.client.Create(context.TODO(), pod)
@@ -93,46 +170,5 @@ func (r *ReconcileMaster) Reconcile(request reconcile.Request) (reconcile.Result
 		reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 
 	}
-
 	return reconcile.Result{}, nil
-}
-
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newMasterForCR(cr *gpv1alpha1.GPDBCluster, num int) *corev1.Pod {
-	labels := map[string]string{
-		"app":  cr.Name,
-		"name": cr.Name + "-master-" + strconv.Itoa(num),
-	}
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-master-" + strconv.Itoa(num),
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "master",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name:      "data",
-							MountPath: "/home/gpadmin/",
-						},
-					},
-				},
-			},
-			Volumes: []corev1.Volume{
-				{
-					Name: "data",
-					VolumeSource: corev1.VolumeSource{
-						PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-							ClaimName: cr.Name + "-master-pvc-" + strconv.Itoa(num),
-						},
-					},
-				},
-			},
-		},
-	}
 }
