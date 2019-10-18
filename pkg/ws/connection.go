@@ -66,19 +66,21 @@ func (conn *Connection) ReadLoop() {
 		data []byte
 		err  error
 	)
+	defer func() {
+		if r := recover(); r != nil {
+			conn.Close()
+		}
+	}()
 	for {
 		if _, data, err = conn.WSConn.ReadMessage(); err != nil {
-			goto ERR
+			panic(err)
 		}
 		select {
 		case conn.InChan <- data:
 		case <-conn.CloseChan:
-			goto ERR
+			panic("Chan closed")
 		}
 	}
-
-ERR:
-	conn.Close()
 }
 
 func (conn *Connection) WriteLoop() {
@@ -86,16 +88,22 @@ func (conn *Connection) WriteLoop() {
 		data []byte
 		err  error
 	)
+
+	defer func() {
+		if r := recover(); r != nil {
+			conn.Close()
+		}
+	}()
+
 	for {
 		select {
 		case data = <-conn.OutChan:
 		case <-conn.CloseChan:
-			goto ERR
+			panic("Chan closed")
 		}
 		if err = conn.WSConn.WriteMessage(websocket.TextMessage, data); err != nil {
-			goto ERR
+			panic(err)
 		}
 	}
-ERR:
-	conn.Close()
+
 }

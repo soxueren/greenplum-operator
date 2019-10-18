@@ -80,6 +80,7 @@ func Wshandler(w http.ResponseWriter, r *http.Request) {
 		projob JobProcess
 	)
 
+	
 	if wsConn, err = Wsupgrader.Upgrade(w, r, nil); err != nil {
 		return
 	}
@@ -95,6 +96,14 @@ func Wshandler(w http.ResponseWriter, r *http.Request) {
 		Status:  "ready",
 		Process: 0,
 	})
+
+	defer func() {
+		if r := recover(); r != nil {
+			CleanJob(uid)
+		    conn.Close()
+		}
+	}()
+
 
 	go func() {
 		var err error
@@ -112,17 +121,11 @@ func Wshandler(w http.ResponseWriter, r *http.Request) {
 			if job.Id == uid && projob != job {
 				b, _ := json.Marshal(job)
 				if err_w := conn.WriteMessage(b); err_w != nil {
-					goto ERR
+					panic(err_w)
 				}
 				projob = job
 			}
 		}
-	}
-
-ERR:
-	{
-		CleanJob(uid)
-		conn.Close()
 	}
 }
 
