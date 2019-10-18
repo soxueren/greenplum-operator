@@ -4,6 +4,7 @@ Greenplum Operator for Kubernetes
 
 ## Overview
 
+![image](./static/greenplum-cluster.png)
 
 ## Features
 - Rolling updates on greenplum  cluster changes
