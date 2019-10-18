@@ -9,6 +9,7 @@ import (
 func NewPersistentVolume(cr *gpv1alpha1.GPDBCluster, tag string, suffix string) *corev1.PersistentVolumeClaim {
 	labels := map[string]string{
 		"app": cr.Name + "-pvc-" + tag + "-" + suffix,
+		"tag": tag,
 	}
 	return &corev1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{

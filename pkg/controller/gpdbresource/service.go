@@ -8,9 +8,11 @@ import (
 )
 
 func NewService(cr *gpv1alpha1.GPDBCluster) *corev1.Service {
+	
 	labels := map[string]string{
-		"app": cr.Name,
+		"app": cr.Name,		
 	}
+
 	selector := make(map[string]string)
 	selector["app"] = cr.Name
 	selector["name"] = cr.Name + "-" + cr.Spec.MasterSelector

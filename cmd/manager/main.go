@@ -29,9 +29,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 
-	// "github.com/soxueren/greenplum-operator/pkg/routers"
-	// "github.com/soxueren/greenplum-operator/pkg/server"
-	// "github.com/DeanThompson/ginpprof"
+	 //"github.com/soxueren/greenplum-operator/pkg/routers"
+	 //"github.com/soxueren/greenplum-operator/pkg/server"
+	 //"github.com/DeanThompson/ginpprof"
 )
 
 // Change below variables to serve metrics on different host or port.

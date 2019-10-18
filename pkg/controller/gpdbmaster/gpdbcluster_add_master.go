@@ -17,7 +17,7 @@ import (
 )
 
 var _ reconcile.Reconciler = &ReconcileMaster{}
-var tag = "master"
+
 
 type ReconcileMaster struct {
 	// This client, initialized using mgr.Client() above, is a split client
@@ -56,32 +56,24 @@ func (r *ReconcileMaster) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
-	_, err = createServiceForCR(r, instance)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
+    r.CreateServiceForCR(instance)
 
-	_, err = createPVCForCR(r, instance)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	//TODO when the number of  pods is  more than Replicas,reduce it ?
-	_, err = createNodeForCR(r, instance)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
+	r.CreatePVCForCR(instance)
+	
+	// //TODO when the number of  pods is  more than Replicas,reduce it ?
+	r.CreateNodeForCR(instance)
+	
 	return reconcile.Result{}, nil
 }
 
-func createServiceForCR(r *ReconcileMaster, instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
+func (r *ReconcileMaster) CreateServiceForCR(instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
 
 	reqLogger := log.WithValues("Service.initialize")
 
 	srv := gpdbresource.NewService(instance)
 	reqLogger.Info("Creating a new service", "srv.Name", srv.Name)
 	//Check if this Pod already exists
-	found := &corev1.Pod{}
+	found := &corev1.Service{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: srv.Name, Namespace: srv.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Service", "Service.Namespace", srv.Namespace, "Service.Name", srv.Name)
@@ -100,7 +92,7 @@ func createServiceForCR(r *ReconcileMaster, instance *gpv1alpha1.GPDBCluster) (r
 	return reconcile.Result{}, nil
 }
 
-func createPVCForCR(r *ReconcileMaster, instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
+func (r *ReconcileMaster) CreatePVCForCR(instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
 	reqLogger := log.WithValues("PersistentVolumeClaim.initialize")
 	size := instance.Spec.MasterAndStandby.Replicas
 	// when GPDBCluster created,create pvc and create gpdb node pod
@@ -114,8 +106,8 @@ func createPVCForCR(r *ReconcileMaster, instance *gpv1alpha1.GPDBCluster) (recon
 			return reconcile.Result{}, err
 		}
 
-		//Check if this Pod already exists
-		found := &corev1.Pod{}
+		//Check if this PersistentVolumeClaim already exists
+		found := &corev1.PersistentVolumeClaim{}
 		err := r.client.Get(context.TODO(), types.NamespacedName{Name: pvc.Name, Namespace: pvc.Namespace}, found)
 		if err != nil && errors.IsNotFound(err) {
 			reqLogger.Info("Creating a new PersistentVolumeClaim", "pvc.Namespace", pvc.Namespace, "pvc.Name", pvc.Name)
@@ -137,7 +129,7 @@ func createPVCForCR(r *ReconcileMaster, instance *gpv1alpha1.GPDBCluster) (recon
 	return reconcile.Result{}, nil
 }
 
-func createNodeForCR(r *ReconcileMaster, instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
+func (r *ReconcileMaster) CreateNodeForCR(instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Pod.initialize")
 	size := instance.Spec.MasterAndStandby.Replicas
 	// when GPDBCluster created,create pvc and create gpdb node pod

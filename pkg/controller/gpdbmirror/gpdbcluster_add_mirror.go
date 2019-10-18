@@ -18,8 +18,6 @@ import (
 
 var _ reconcile.Reconciler = &ReconcileMirror{}
 
-var tag = "mirror"
-
 type ReconcileMirror struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
@@ -57,20 +55,14 @@ func (r *ReconcileMirror) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
-	_, err = createPVCForCR(r, instance)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	//TODO when the number of  pods is  more than Replicas,reduce it ?
-	_, err = createNodeForCR(r, instance)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
+	r.CreatePVCForCR(instance)
+	// //TODO when the number of  pods is  more than Replicas,reduce it ?
+	r.CreateNodeForCR(instance)	
 
 	return reconcile.Result{}, nil
 }
 
-func createPVCForCR(r *ReconcileMirror, instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
+func (r *ReconcileMirror) CreatePVCForCR(instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
 	reqLogger := log.WithValues("PersistentVolumeClaim.initialize")
 	size := instance.Spec.Mirrors.Replicas
 	// when GPDBCluster created,create pvc and create gpdb node pod
@@ -84,8 +76,8 @@ func createPVCForCR(r *ReconcileMirror, instance *gpv1alpha1.GPDBCluster) (recon
 			return reconcile.Result{}, err
 		}
 
-		//Check if this Pod already exists
-		found := &corev1.Pod{}
+		//Check if this PersistentVolumeClaim already exists
+		found := &corev1.PersistentVolumeClaim{}
 		err := r.client.Get(context.TODO(), types.NamespacedName{Name: pvc.Name, Namespace: pvc.Namespace}, found)
 		if err != nil && errors.IsNotFound(err) {
 			reqLogger.Info("Creating a new PersistentVolumeClaim", "pvc.Namespace", pvc.Namespace, "pvc.Name", pvc.Name)
@@ -107,7 +99,7 @@ func createPVCForCR(r *ReconcileMirror, instance *gpv1alpha1.GPDBCluster) (recon
 	return reconcile.Result{}, nil
 }
 
-func createNodeForCR(r *ReconcileMirror, instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
+func (r *ReconcileMirror) CreateNodeForCR(instance *gpv1alpha1.GPDBCluster) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Pod.initialize")
 	size := instance.Spec.Mirrors.Replicas
 	// when GPDBCluster created,create pvc and create gpdb node pod
